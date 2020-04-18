@@ -7,9 +7,10 @@ from basic_utils import nn2na, get_usage_string, get_min_cut, get_selected_arcs
 #  Marco Inda
 #  Problema de Relajación aplicando Lagrange.
 #  Conclusion : Con este metodo , y encontrando lambda : 0.434 , como mejor valor , y realizando
-#  una busqueda de 100 valores , digamos que con 100 valores se puede encontrar con
-#
-#
+#  una busqueda de 100 valores.
+#  la funcion de L(lagrange) , se hace máximo en el punto lambda = 0,434
+#  En ese punto es dual y primal se aproximan y toman el mejor valor de función objetivo.
+#  Los arcos encontrados ( (0,1), (1,5) , son los correctos
 #
 
 # IMPORT THE DATA:
@@ -51,8 +52,8 @@ for lambda_i in vector_de_lambdas:
 
        # a partir de acá optimizamos.
        res = linprog(C_lagrange, A_ub=t, b_ub=bu, A_eq=Aeq, b_eq=beq, bounds=bounds, method='revised simplex')
-
-       VLagy.append(res.fun)
+       Dual = res.fun  - lambda_i * 8
+       VLagy.append(Dual)
 
 ##
 
@@ -69,6 +70,6 @@ selarcs = get_selected_arcs(arc_idxs,res.x )
 print('## Results ## ')
 print(' arcos : ', selarcs )
 print ('The row solution  will be el último res. alcanzado : %s ' % res)
-
+print ( " valores de res : ", VLagy)
 plt.plot ( vector_de_lambdas, VLagy)
 plt.show()
