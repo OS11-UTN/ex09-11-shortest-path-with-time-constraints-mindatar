@@ -1,11 +1,16 @@
 import numpy as np
+import array
+import matplotlib.pyplot as plt
 from scipy.optimize import linprog
 from basic_utils import nn2na, get_usage_string, get_min_cut, get_selected_arcs
 
 #  Marco Inda
 #  Problema de Relajación aplicando Lagrange.
+#  Conclusion : Con este metodo , y encontrando lambda : 0.434 , como mejor valor , y realizando
+#  una busqueda de 100 valores , digamos que con 100 valores se puede encontrar con
 #
-
+#
+#
 
 # IMPORT THE DATA:
 # misma matriz del ej. 10
@@ -19,58 +24,51 @@ NN = np.array([[0, 1, 1, 0, 0, 0],
 # DATA MANIPULATION:
 Aeq, arc_idxs = nn2na(NN)
 
-#C = np.array([2, 1, 2, 5, 2, 1, 2])
+C = np.array([2, 1, 2, 5, 2, 1, 2])
 # des marco el valor de C por que itero en la solución abajo.
 beq = np.array([1, 0, 0, 0, 0, -1])
-VLag=[]
+# vector donde quiero rescatar las ejecuciones, los valores.
+
+VLagy=[]
+
 bounds = tuple([(0, 3),(0,1),(0,3),(0,1),(0,3),(0,3),(0,5)])
 
 # Este es un vector y va por definición con [[]] como si fuese una matriz , asi lo acept Py.
-t=[[3,1,3,1,3,1,5]]
 
-# Tambien aunque es sólo un valor , va como vector.
-# Parámetros de linprog.
-# scipy.optimize.linprog(c, A_ub=None, b_ub=None, A_eq=None, b_eq=None, bounds=None, method=’interior-point’, callback=None, options=None, x0=None)
-#
-#c : es el vector de pesos o coeficientes de la funcion costo.
-# A_ub: es la matriz de coeficientes para el sistema de restricciones “menos que”.
-# b_u: es el vector de coeficientes libres en el sistema de ecuaciones.
-# A_eq (opcional): es la matriz de coeficientes para el sistema de restricciones “igual que”.
-# b_eq (opcional):es el vector de coeficientes libres en el sistema de ecuaciones de igualdad.
-# bounds(opcional): lista de tuplas(min,max) para cada variable x
-# method: cadena de texto del metodo a utilizar y tenemos 3 opciones
-# ‘interior-point’ (en defecto)
-# ‘revised simplex’ (recomendado)
-# ‘simplex’ (obsoleto)
-# x0: valores inciciales para inciar el proceso iterativo
+bu =[8]
+## Codigo de Rodrigo
 
-bu = [8]
+# Ojo que t se define como un array [[]] doble corchete así lo requiere linprog.
+t = np.array([[3, 1 ,3 ,1 ,3, 1, 5]])
+
+# Estos son los tiempos
+vector_de_lambdas = np.linspace(0, 1, 100) # armo un vector con 100 valores de lambda entre 0 y 1
+
+
+for lambda_i in vector_de_lambdas:
+
+       C_lagrange = C + lambda_i * t
+
+       # a partir de acá optimizamos.
+       res = linprog(C_lagrange, A_ub=t, b_ub=bu, A_eq=Aeq, b_eq=beq, bounds=bounds, method='revised simplex')
+
+       VLagy.append(res.fun)
+
+##
+
 print('## Optimizer inputs ## \n'
       'A_eq Node-Arc matrix:\n%s \n'
       'b_eq demand-supply vector: %s \n'
       'Bounds of each X arc variable: %s \n' % ( Aeq, beq, bounds))
 
 # OPTIMIZE:
-# proceso den un ciclo de 10
-i=0
-for i in range(10):
-    u = 0,1
-    for j, val in  enumerate(t):
-        c1= 2+u*val
-        c2= 1+u*val
-        c3= 2+u*val
-        c4= 5+u*val
-        c5= 2+u*val
-        c6= 1+u*val
-        c7= 2+u*val
-        #C = np.array([2+u*val, 1+u*val , 2+u*val, 5+u*val , 2+u*val, 1+u*val, 2+u*val])
-        C = np.array([c1, c2, c3, c4, c5,c6,c7])
-        res = linprog(C,A_ub=t,b_ub=bu ,A_eq=Aeq, b_eq=beq, bounds=bounds, method='interior-point' )
-        VLag[i]= res
-        u= u + 0,1
 
 # GET THE SOLUTION:
 selarcs = get_selected_arcs(arc_idxs,res.x )
 
 print('## Results ## ')
-print ('The row solution  will be : %s ' % Vlag)
+print(' arcos : ', selarcs )
+print ('The row solution  will be el último res. alcanzado : %s ' % res)
+
+plt.plot ( vector_de_lambdas, VLagy)
+plt.show()
