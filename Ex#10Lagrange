@@ -32,7 +32,7 @@ beq = np.array([1, 0, 0, 0, 0, -1])
 
 VLagy=[]
 
-bounds = tuple([(0, 3),(0,1),(0,3),(0,1),(0,3),(0,3),(0,5)])
+bounds = tuple([(0, None),(0,None),(0,None),(0,None),(0,None),(0,None),(0,None)])
 
 # Este es un vector y va por definición con [[]] como si fuese una matriz , asi lo acept Py.
 
@@ -40,7 +40,7 @@ bu =[8]
 ## Codigo de Rodrigo
 
 # Ojo que t se define como un array [[]] doble corchete así lo requiere linprog.
-t = np.array([[3, 1 ,3 ,1 ,3, 1, 5]])
+t = np.array([[3, 1 ,3 ,1 ,3, 3, 5]])
 
 # Estos son los tiempos
 vector_de_lambdas = np.linspace(0, 1, 100) # armo un vector con 100 valores de lambda entre 0 y 1
@@ -50,8 +50,10 @@ for lambda_i in vector_de_lambdas:
 
        C_lagrange = C + lambda_i * t
 
-       # a partir de acá optimizamos.
-       res = linprog(C_lagrange, A_ub=t, b_ub=bu, A_eq=Aeq, b_eq=beq, bounds=bounds, method='revised simplex')
+       # a partir e acá optimizamos.
+       #res = linprog(C_lagrange, A_ub=t, b_ub=bu, A_eq=Aeq, b_eq=beq, bounds=bounds, method='revised simplex')
+       # Sacamos la Restriciones complejade T , por que lo consideramos en Lagrange.
+       res = linprog(C_lagrange, A_eq=Aeq, b_eq=beq, bounds=bounds, method='revised simplex')
        Dual = res.fun  - lambda_i * 8
        VLagy.append(Dual)
 
