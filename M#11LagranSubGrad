@@ -5,12 +5,11 @@ from scipy.optimize import linprog
 from basic_utils import nn2na, get_usage_string, get_min_cut, get_selected_arcs
 
 #  Marco Inda
-#  Problema de Relajación aplicando Lagrange.
-#  Conclusion : Con este metodo , y encontrando lambda : 0.434 , como mejor valor , y realizando
-#  una busqueda de 100 valores.
-#  la funcion de L(lagrange) , se hace máximo en el punto lambda = 0,434
-#  En ese punto es dual y primal se aproximan y toman el mejor valor de función objetivo.
-#  Los arcos encontrados ( (0,1), (1,5) , son los correctos
+#  Problema de Relajación aplicando Lagrange con heurista de SubGradiente.
+#  Este algoritmo nos ayuda a encontrar el Lambda optimo , y el Max
+#  Valor de la función de Lagrange, que me permite converger al min. costo
+#  de la función objetivo Relajada ( con penalización ).
+#  En este caso parececiese ser: lambda: 3.9994 , Fun-Obj. 8.58
 #
 
 # IMPORT THE DATA:
@@ -39,7 +38,7 @@ bu =[8]
 ## Codigo de Rodrigo
 
 # Ojo que t se define como un array [[]] doble corchete así lo requiere linprog.
-t = np.array([[3, 1 ,3 ,1 ,3, 3, 5]])
+t = np.array([3, 1 ,3 ,1 ,3, 3, 5])
 
 ##
 ##  Metodo de Lagrange con SubGradiente
@@ -47,36 +46,40 @@ t = np.array([[3, 1 ,3 ,1 ,3, 3, 5]])
 ##  tol Tolerancia 10-3
 lambu = 0
 tol = 0.001
-diff = 0.01
-i = 1000
+diff = 0.1
+i = 1
+V1 =[]
+V2 =[]
+V3= []
 while diff > tol :
     C_lagrange = C + lambu * t
     res= linprog(C_lagrange,  A_eq=Aeq, b_eq=beq, bounds=bounds, method='revised simplex')
     L = res.fun - (lambu * 8)
-    LG = (t * res.x) - 8
+    LG = (t @ res.x) - 8
     step = 1/i
     ant = lambu
     lambu = lambu + step * LG
-    diff = lambu-ant
-    print(" step ", step)
-    print ("C_lagrange ", C_lagrange)
-    print ("L : ", L )
-    print (" lG .. : ", LG)
-    print ( " res-fun .. : ", res.fun)
-    print ( " difre" , diff)
-    print  ( "lambda ", lambu)
+    diff = abs(lambu-ant)
+    V1.append(lambu)
+    V2.append(LG)
+    V3.append(res.fun)
+
     i = i + 1
 
-print('## Optimizer inputs ## \n'
-      'A_eq Node-Arc matrix:\n%s \n'
-      'b_eq demand-supply vector: %s \n'
-      'Bounds of each X arc variable: %s \n' % ( Aeq, beq, bounds))
-
 # OPTIMIZE:
+selarcs = get_selected_arcs(arc_idxs,res.x )
 
 # GET THE SOLUTION:
 #selarcs = get_selected_arcs(arc_idxs,res.x )
 
 print('## Results ## ')
-print ('The row solution  will be el último res. alcanzado :  ' , lambu)
-print ('The valor de la función ulitma  :  ' , LG)
+print ('The row solution  will be el último res. alcanzado , lamda :  ' , lambu)
+print ( ' Arcos selecionados : ', selarcs )
+print ('The valor de Lagrange  :  ' , LG)
+print ( " el valor de la funcion Obetivo ", res)
+# Grafico lambda(x) Vs LG(y)
+plt.plot ( V1, V2)
+plt.show()
+#Grafico Lambda(x) , Fun-objetivo (Y)
+plt.plot ( V1, V3)
+plt.show()
